@@ -1,0 +1,5 @@
+= ARD, Annotation Regex Deserialisation
+
+ARD was created as a way of deserialising chunks of text (HTML, but applies to other structured text as well) by annotating POJOs with Regex matchers.
+
+WARNING: This is garbage work in progress
