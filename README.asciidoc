@@ -3,3 +3,28 @@
 ARD was created as a way of deserialising chunks of text (HTML, but applies to other structured text as well) by annotating POJOs with Regex matchers.
 
 WARNING: This is garbage work in progress
+
+== Quickstart
+
+Annotate your properties like so
+
+[source,java]
+----
+@ObjectExpression("^.+$")
+public class MySimplePojo {
+
+    @FieldExpression("[Ff]irst.+[Pp]roperty")
+    public String firstProperty;
+
+    @FieldExpression("[Ss]econd.+[Pp]roperty")
+    private String secondProperty;
+
+    public void setSecondProperty(String value) {
+        this.secondProperty = value;
+    }
+}
+----
+
+`@FieldExpression` - required annotation to capture value from input
+
+`@ObjectExpression` - optional annotation to limit scope of capture from input
