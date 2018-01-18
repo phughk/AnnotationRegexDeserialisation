@@ -26,6 +26,7 @@ package com.kaznowski.ard.deserialiser;
 
 import com.kaznowski.ard.samples.SingleFieldNoLimitPojo;
 import com.kaznowski.ard.samples.SingleFieldPatternPojo;
+import com.kaznowski.ard.samples.SinglePropertyPatternPojo;
 import org.junit.Test;
 
 import java.util.List;
@@ -75,6 +76,14 @@ public class ArdDeserialiserTest {
 
   @Test
   public void regexWorksOnSetter() {
+    // given a matcher for a private property with a public setter
+    ArdDeserialiser<SinglePropertyPatternPojo> subject = new ArdDeserialiser<>( SinglePropertyPatternPojo.class );
 
+    // when we deserialise a chunk of text
+    List<SinglePropertyPatternPojo> result = subject.match( "some text" );
+
+    // then we get the expected value
+    assertEquals( 1, result.size() );
+    assertEquals( "some text", result.get( 0 ).getValue() );
   }
 }

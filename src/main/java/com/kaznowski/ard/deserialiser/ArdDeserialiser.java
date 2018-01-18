@@ -36,10 +36,12 @@ import java.io.Writer;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -116,7 +118,42 @@ public final class ArdDeserialiser<E> {
     }
     catch ( IllegalAccessException e )
     {
+      // field not accessible, trying setter
+      Optional<Method> setter = findFieldSetter( field );
+      if ( setter.isPresent() )
+      {
+        setFieldViaSetter( instance, setter.get(), value );
+      }
+      else
+      {
+        throw new RuntimeException( String.format( "Unable to set %s TODO", field.getName() ) );
+      }
+    }
+  }
+
+  private void setFieldViaSetter( E instance, Method setter, Object value ) {
+    try
+    {
+      setter.invoke( instance, value );
+    }
+    catch ( IllegalAccessException | InvocationTargetException e )
+    {
       logError( e, LOG::severe );
+    }
+  }
+
+  private static Optional<Method> findFieldSetter( Field field ) {
+    String fieldName = field.getName();
+    String firstLetter = fieldName.substring( 0, 1 );
+    String remainingLetters = fieldName.substring( 1, fieldName.length() );
+    String setterName = String.format( "set%s%s", firstLetter.toUpperCase(), remainingLetters );
+    try
+    {
+      return Optional.of( field.getDeclaringClass().getDeclaredMethod( setterName, field.getType() ) );
+    }
+    catch ( NoSuchMethodException e )
+    {
+      return Optional.empty();
     }
   }
 
@@ -143,6 +180,7 @@ public final class ArdDeserialiser<E> {
     return stringBuilder.toString();
   }
 
+  @Deprecated
   private static void logError( Throwable throwable, Consumer<String> logger ) {
     Writer writer = new StringWriter();
     PrintWriter printWriter = new PrintWriter( writer );
