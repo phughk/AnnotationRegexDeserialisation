@@ -48,13 +48,18 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public final class ArdDeserialiser<E> {
   private final Class<E> clazz;
   private final Logger LOG = Logger.getLogger( ArdDeserialiser.class.getName() );
-  Handler handler = new ConsoleHandler();
+  private final Handler handler = new ConsoleHandler();
 
+  /**
+   * @param clazz Class of generic that is being deserialised to.
+   */
   public ArdDeserialiser( final Class<E> clazz ) {
     this.clazz = clazz;
     LOG.addHandler( handler );
@@ -87,9 +92,21 @@ public final class ArdDeserialiser<E> {
     String result = consumeAndReturnNextSearchSpace( reader );
     Supplier<E> constructor = createConstructor( clazz );
     E instance = constructor.get();
-    Field field = regexMatchers().stream().findFirst().get();
-    setField( instance, field, result );
+    Field field = fieldsAnnotatedForDeserialisation().stream().findFirst().get();
+    FieldExpression fieldExpression = field.getAnnotation( FieldExpression.class );
+    String pattern = patternFromField( fieldExpression );
+    String valueMatchingPattern = matchByPattern( pattern, result );
+    setField( instance, field, valueMatchingPattern );
     return instance;
+  }
+
+  private String patternFromField( FieldExpression fieldExpression ) {
+    String raw = fieldExpression.value();
+    if ( "".equals( raw ) )
+    {
+      return ".*";
+    }
+    return raw;
   }
 
   private void setField( E instance, Field field, Object value ) {
@@ -101,6 +118,13 @@ public final class ArdDeserialiser<E> {
     {
       logError( e, LOG::severe );
     }
+  }
+
+  private String matchByPattern( String regex, String source ) {
+    Pattern pattern = Pattern.compile( regex );
+    Matcher matcher = pattern.matcher( source );
+    matcher.find();
+    return matcher.group();
   }
 
   private String consumeAndReturnNextSearchSpace( BufferedReader bufferedReader ) {
@@ -141,11 +165,11 @@ public final class ArdDeserialiser<E> {
     };
   }
 
-  private Collection<Field> regexMatchers() {
+  private Collection<Field> fieldsAnnotatedForDeserialisation() {
     return Arrays.stream( clazz.getDeclaredFields() ).filter( isRegexField() ).collect( Collectors.toList() );
   }
 
   private static Predicate<Field> isRegexField() {
-    return field -> field.getAnnotation( FieldExpression.class ) == null;
+    return field -> field.getAnnotation( FieldExpression.class ) != null;
   }
 }

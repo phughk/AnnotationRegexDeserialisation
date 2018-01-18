@@ -25,6 +25,7 @@
 package com.kaznowski.ard.deserialiser;
 
 import com.kaznowski.ard.samples.SingleFieldNoLimitPojo;
+import com.kaznowski.ard.samples.SingleFieldPatternPojo;
 import org.junit.Test;
 
 import java.util.List;
@@ -48,8 +49,7 @@ public class ArdDeserialiserTest {
   @Test
   public void fieldMatchesEntireTextWhenValueIsEmpty() {
     // given a matcher that will match the entire text
-    ArdDeserialiser<SingleFieldNoLimitPojo> subject =
-        new ArdDeserialiser<SingleFieldNoLimitPojo>( SingleFieldNoLimitPojo.class );
+    ArdDeserialiser<SingleFieldNoLimitPojo> subject = new ArdDeserialiser<>( SingleFieldNoLimitPojo.class );
 
     // when we deserialise a chunk of text
     String source = "Full chunk of text";
@@ -58,5 +58,23 @@ public class ArdDeserialiserTest {
     // then the entire text has been deserialised into a single value
     assertEquals( 1, result.size() );
     assertEquals( source, result.get( 0 ).value );
+  }
+
+  @Test
+  public void regexPatternMatchesOnField() {
+    // given a matcher that will read only a subset of the text
+    ArdDeserialiser<SingleFieldPatternPojo> subject = new ArdDeserialiser<>( SingleFieldPatternPojo.class );
+
+    // when we deserialise a chunk of text
+    List<SingleFieldPatternPojo> result = subject.match( "zzzabccbazzz" );
+
+    // then we get a single match with the expected value matching pattern
+    assertEquals( 1, result.size() );
+    assertEquals( "abccba", result.get( 0 ).value );
+  }
+
+  @Test
+  public void regexWorksOnSetter() {
+
   }
 }

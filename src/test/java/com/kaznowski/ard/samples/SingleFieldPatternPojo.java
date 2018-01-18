@@ -24,10 +24,9 @@
 
 package com.kaznowski.ard.samples;
 
-import com.kaznowski.ard.annotation.ObjectExpression;
+import com.kaznowski.ard.annotation.FieldExpression;
 
-@ObjectExpression
-public class SamplePojo {
-  public String word;
-  public Integer number;
+public class SingleFieldPatternPojo {
+  @FieldExpression( "[abc]+" )
+  public String value;
 }
